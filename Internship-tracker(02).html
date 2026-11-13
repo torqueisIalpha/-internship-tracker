@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InternTrack – Student Internship Manager</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* ── THEME TOKENS ─────────────────────────────────────────────────────── */
+    :root[data-theme="light"] {
+      --bg:          #f1f5f9;
+      --surface:     #ffffff;
+      --card-bg:     #ffffff;
+      --border:      #e2e8f0;
+      --ink:         #0f172a;
+      --muted:       #64748b;
+      --accent-bg:   #f8fafc;
+      --primary:     #4f46e5;
+      --primary-fg:  #ffffff;
+      --danger:      #ef4444;
+      --warn:        #f59e0b;
+      --success:     #10b981;
+      --shadow:      rgba(0,0,0,0.08);
+      --modal-bg:    rgba(15,23,42,0.55);
+      --modal-card:  #ffffff;
+      --input-bg:    #f8fafc;
+      --input-border:#cbd5e1;
+      --header-bg:   #ffffff;
+    }
+    :root[data-theme="dark"] {
+      --bg:          #0f172a;
+      --surface:     #1e293b;
+      --card-bg:     #1e293b;
+      --border:      #334155;
+      --ink:         #f1f5f9;
+      --muted:       #94a3b8;
+      --accent-bg:   #293548;
+      --primary:     #818cf8;
+      --primary-fg:  #0f172a;
+      --danger:      #f87171;
+      --warn:        #fbbf24;
+      --success:     #34d399;
+      --shadow:      rgba(0,0,0,0.4);
+      --modal-bg:    rgba(0,0,0,0.75);
+      --modal-card:  #1e293b;
+      --input-bg:    #0f172a;
+      --input-border:#334155;
+      --header-bg:   #1e293b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    /* ── SCROLLBAR (dark mode) ──────────────────────────────────────────── */
+    :root[data-theme="dark"] ::-webkit-scrollbar { width: 6px; height: 6px; }
+    :root[data-theme="dark"] ::-webkit-scrollbar-track { background: #1e293b; }
+    :root[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+    /* ── HEADER ─────────────────────────────────────────────────────────── */
+    .site-header {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      position: sticky; top: 0; z-index: 20;
+      box-shadow: 0 1px 8px var(--shadow);
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .logo-pill {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      flex-shrink: 0;
+    }
+
+    /* ── DARK MODE TOGGLE ───────────────────────────────────────────────── */
+    .theme-toggle {
+      width: 44px; height: 24px;
+      background: var(--border);
+      border: none; border-radius: 999px;
+      cursor: pointer; position: relative;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .theme-toggle::after {
+      content: '';
+      position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--surface);
+      transition: transform 0.3s, background 0.3s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    :root[data-theme="dark"] .theme-toggle { background: var(--primary); }
+    :root[data-theme="dark"] .theme-toggle::after { transform: translateX(20px); }
+
+    .theme-label {
+      font-size: 13px; font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── BUTTONS ────────────────────────────────────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      color: #fff;
+      border: none; border-radius: 10px;
+      padding: 10px 20px; cursor: pointer;
+      font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; gap-6px;
+      gap: 6px;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 40%, transparent);
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent; color: var(--muted);
+      border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 8px 16px; cursor: pointer; font-size: 14px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-ghost:hover { background: var(--accent-bg); border-color: var(--muted); }
+
+    .btn-danger {
+      background: var(--danger); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 6px 14px; cursor: pointer;
+      font-size: 13px; font-weight: 700;
+      transition: opacity 0.15s;
+    }
+    .btn-danger:hover { opacity: 0.82; }
+
+    .btn-edit {
+      background: color-mix(in srgb, var(--primary) 12%, transparent);
+      color: var(--primary);
+      border: 1.5px solid color-mix(in srgb, var(--primary) 35%, transparent);
+      border-radius: 8px; padding: 5px 12px; cursor: pointer;
+      font-size: 13px; font-weight: 600;
+      transition: opacity 0.15s;
+    }
+    .btn-edit:hover { opacity: 0.75; }
+
+    /* ── STAT CARDS ─────────────────────────────────────────────────────── */
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 4px;
+      transition: background 0.25s, border-color 0.25s;
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    /* ── MAIN CARD / TABS ───────────────────────────────────────────────── */
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px; overflow: hidden;
+      box-shadow: 0 2px 10px var(--shadow);
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .tab-bar {
+      display: flex; border-bottom: 1px solid var(--border);
+      padding: 0 16px; gap: 4px; overflow-x: auto;
+      background: var(--accent-bg);
+    }
+    .tab-btn {
+      background: none; border: none;
+      padding: 14px 16px 12px;
+      font-size: 14px; font-weight: 500;
+      color: var(--muted); cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-active {
+      color: var(--primary) !important;
+      border-bottom-color: var(--primary) !important;
+      font-weight: 700 !important;
+    }
+
+    /* ── TABLE ──────────────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead tr {
+      background: var(--accent-bg);
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px; letter-spacing: 0.06em;
+    }
+    th, td { padding: 12px 16px; text-align: left; }
+    tbody tr {
+      border-top: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    tbody tr:hover { background: var(--accent-bg); }
+
+    /* ── BADGES ─────────────────────────────────────────────────────────── */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .badge-applied   { background: #dbeafe; color: #1d4ed8; }
+    .badge-test      { background: #ede9fe; color: #6d28d9; }
+    .badge-interview { background: #fef3c7; color: #b45309; }
+    .badge-offer     { background: #d1fae5; color: #065f46; }
+    .badge-rejected  { background: #fee2e2; color: #991b1b; }
+    :root[data-theme="dark"] .badge-applied   { background: #1e3a5f; color: #93c5fd; }
+    :root[data-theme="dark"] .badge-test      { background: #2e1b5e; color: #c4b5fd; }
+    :root[data-theme="dark"] .badge-interview { background: #432908; color: #fcd34d; }
+    :root[data-theme="dark"] .badge-offer     { background: #052e1c; color: #6ee7b7; }
+    :root[data-theme="dark"] .badge-rejected  { background: #3b1414; color: #fca5a5; }
+
+    /* Pipeline pills */
+    .pipe-applied   { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+    .pipe-test      { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+    .pipe-interview { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
+    .pipe-offer     { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .pipe-rejected  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    :root[data-theme="dark"] .pipe-applied   { background: #1e3a5f; color: #93c5fd; border-color: #1d4ed8; }
+    :root[data-theme="dark"] .pipe-test      { background: #2e1b5e; color: #c4b5fd; border-color: #7c3aed; }
+    :root[data-theme="dark"] .pipe-interview { background: #432908; color: #fcd34d; border-color: #b45309; }
+    :root[data-theme="dark"] .pipe-offer     { background: #052e1c; color: #6ee7b7; border-color: #065f46; }
+    :root[data-theme="dark"] .pipe-rejected  { background: #3b1414; color: #fca5a5; border-color: #991b1b; }
+
+    /* deadline urgency left border */
+    .row-urgent { border-left: 4px solid var(--danger) !important; }
+    .row-soon   { border-left: 4px solid var(--warn) !important; }
+    .row-ok     { border-left: 4px solid var(--success) !important; }
+
+    /* ── FORM INPUTS (global) ───────────────────────────────────────────── */
+    input, select, textarea {
+      background: var(--input-bg);
+      color: var(--ink);
+      border: 1.5px solid var(--input-border);
+      border-radius: 9px;
+      padding: 10px 13px;
+      width: 100%;
+      outline: none;
+      font-size: 14px;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.25s;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+    }
+    input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.7; }
+
+    /* ── PROGRESS BAR ───────────────────────────────────────────────────── */
+    .prog-bar { height: 5px; border-radius: 3px; background: var(--border); overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 3px; background: var(--primary); transition: width 0.4s; }
+
+    /* ── COUNT PILL ─────────────────────────────────────────────────────── */
+    .count-pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700; min-width: 28px;
+    }
+
+    /* ── SEARCH ─────────────────────────────────────────────────────────── */
+    .search-wrap { position: relative; }
+    .search-wrap input { padding-left: 38px; }
+    .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
+
+    /* ── ACTION TAG ─────────────────────────────────────────────────────── */
+    .action-tag {
+      display: inline-block;
+      background: color-mix(in srgb, var(--warn) 18%, transparent);
+      color: var(--warn); border: 1px solid var(--warn);
+      border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700;
+    }
+
+    /* ── TOAST ──────────────────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 20px;
+      box-shadow: 0 8px 30px var(--shadow);
+      font-size: 14px; font-weight: 500; color: var(--ink);
+      z-index: 999; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      transform: translateY(8px);
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── MODAL OVERLAY ──────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: var(--modal-bg);
+      z-index: 50;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* ── ADD / EDIT MODAL BOX ───────────────────────────────────────────── */
+    .modal-box {
+      background: var(--modal-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%; max-width: 580px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+      overflow: hidden;
+      animation: modalPop 0.22s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes modalPop {
+      from { opacity:0; transform: scale(0.93) translateY(16px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+
+    /* Modal gradient header banner */
+    .modal-header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+      padding: 22px 24px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    :root[data-theme="dark"] .modal-header {
+      background: linear-gradient(135deg, #3730a3 0%, #5b21b6 50%, #7e22ce 100%);
+    }
+    .modal-header-title { color: #fff; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+    .modal-header-sub   { color: rgba(255,255,255,0.72); font-size: 13px; margin-top: 2px; }
+    .modal-close-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); color: #fff;
+      border: none; cursor: pointer; font-size: 17px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .modal-close-btn:hover { background: rgba(255,255,255,0.32); }
+
+    /* Modal body */
+    .modal-body { padding: 24px; }
+
+    /* Section divider inside modal */
+    .modal-section {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: var(--accent-bg);
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .modal-section-title {
+      font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--primary);
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Field label */
+    .field-label {
+      display: block;
+      font-size: 12px; font-weight: 700;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: 5px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .field-label .req { color: var(--danger); font-size: 14px; line-height: 1; }
+
+    /* Status select styled grid */
+    .status-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    }
+    .status-opt {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      border: 2px solid var(--border); border-radius: 10px;
+      padding: 8px 4px; cursor: pointer;
+      font-size: 11px; font-weight: 700; text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--surface);
+      color: var(--muted);
+    }
+    .status-opt:hover { border-color: var(--primary); color: var(--ink); }
+    .status-opt.selected { color: #fff; border-color: transparent; }
+    .status-opt.sel-applied   { background: #2563eb; }
+    .status-opt.sel-test      { background: #7c3aed; }
+    .status-opt.sel-interview { background: #d97706; }
+    .status-opt.sel-offer     { background: #059669; }
+    .status-opt.sel-rejected  { background: #dc2626; }
+    .status-opt .s-icon { font-size: 18px; }
+
+    /* Confirm dialog box */
+    #confirmBox {
+      background: var(--modal-card);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 32px 28px;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+      animation: modalPop 0.2s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .hidden { display: none !important; }
+
+    /* Fade-in for stat cards */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+    .fade-in { animation: fadeUp 0.28s ease both; }
+
+    /* ── THREE-DAY WARNING BANNER ───────────────────────────────────────── */
+    .warning-banner {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: #fffbeb;
+      border: 1.5px solid #f59e0b;
+      border-left: 5px solid #f59e0b;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    :root[data-theme="dark"] .warning-banner {
+      background: #2d1f00;
+      border-color: #fbbf24;
+    }
+    .warning-banner .wb-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .warning-banner .wb-body { flex: 1; }
+    .warning-banner .wb-title {
+      font-size: 14px; font-weight: 800; color: #92400e; margin-bottom: 3px;
+    }
+    :root[data-theme="dark"] .warning-banner .wb-title { color: #fbbf24; }
+    .warning-banner .wb-desc {
+      font-size: 13px; color: #78350f; line-height: 1.5;
+    }
+    :root[data-theme="dark"] .warning-banner .wb-desc { color: #fde68a; }
+    .warning-banner .wb-badges {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    }
+    .wb-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #fef3c7; border: 1px solid #fcd34d;
+      border-radius: 999px; padding: 3px 10px;
+      font-size: 12px; font-weight: 700; color: #92400e;
+      cursor: pointer; transition: background 0.15s;
+    }
+    :root[data-theme="dark"] .wb-chip { background: #3a2800; border-color: #b45309; color: #fbbf24; }
+    .wb-chip:hover { background: #fde68a; }
+    :root[data-theme="dark"] .wb-chip:hover { background: #503600; }
+    .wb-filter-btn {
+      background: #f59e0b; color: #fff; border: none;
+      border-radius: 8px; padding: 7px 14px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .wb-filter-btn:hover { opacity: 0.85; }
+
+    /* ── MEMO FIELD (inline in table) ───────────────────────────────────── */
+    .memo-input {
+      border: 1px dashed var(--border) !important;
+      border-radius: 6px !important;
+      padding: 4px 8px !important;
+      font-size: 12px !important;
+      width: 100% !important;
+      background: transparent !important;
+      color: var(--muted) !important;
+      min-width: 130px;
+      transition: border-color 0.15s, background 0.15s !important;
+    }
+    .memo-input:focus {
+      border-color: var(--primary) !important;
+      background: var(--input-bg) !important;
+      color: var(--ink) !important;
+    }
+    .memo-input::placeholder { color: var(--border) !important; }
+
+    /* ── RULES & LIMITATIONS PANEL ──────────────────────────────────────── */
+    .rules-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-top: 20px;
+      transition: background 0.25s, border-color 0.25s;
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+    .rules-title {
+      font-size: 11px; font-weight: 800;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .rules-title::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .rule-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 12px;
+      background: var(--accent-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px; color: var(--ink);
+      transition: background 0.25s;
+    }
+    .rule-check {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #dcfce7; color: #16a34a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900; flex-shrink: 0; margin-top: 1px;
+    }
+    :root[data-theme="dark"] .rule-check { background: #052e1c; color: #4ade80; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .status-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════ HEADER ════════════════════════════ -->
+<header class="site-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="logo-pill">🎓</div>
+    <div>
+      <div style="font-weight:800;font-size:17px;color:var(--ink);letter-spacing:-0.02em;">InternTrack</div>
+      <div style="font-size:12px;color:var(--muted);">Student Internship Manager</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <!-- Dark Mode Toggle -->
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:14px;">☀️</span>
+      <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" onclick="toggleTheme()"></button>
+      <span style="font-size:14px;">🌙</span>
+    </div>
+
+    <button onclick="openModal()" class="btn-primary">
+      <span style="font-size:18px;line-height:1;">＋</span> Add Application
+    </button>
+  </div>
+</header>
+
+<!-- ════════════════════════════ MAIN ════════════════════════════ -->
+<main style="max-width:1200px;margin:0 auto;padding:24px 16px 60px;">
+
+  <!-- THREE-DAY WARNING BANNER (auto-shown when any deadline ≤ 3 days) -->
+  <div id="warningBanner" class="warning-banner hidden">
+    <div class="wb-icon">⚠️</div>
+    <div class="wb-body">
+      <div class="wb-title">Three-Day Warning — Applications Need Immediate Action</div>
+      <div class="wb-desc">
+        The following applications have deadlines <strong>within 3 days</strong> or are overdue.
+        Review them now and take the required steps before the window closes.
+      </div>
+      <div class="wb-badges" id="warnBadges"></div>
+    </div>
+    <button class="wb-filter-btn" onclick="applyUrgentFilter()">Show Only These ↗</button>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div id="statCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+  <!-- TABS CARD -->
+  <div class="main-card">
+    <div class="tab-bar" id="tabBar">
+      <button onclick="switchTab('all')"       class="tab-btn" data-tab="all">📋 All Applications</button>
+      <button onclick="switchTab('pipeline')"  class="tab-btn" data-tab="pipeline">🔀 Pipeline</button>
+      <button onclick="switchTab('deadlines')" class="tab-btn" data-tab="deadlines">⏰ Deadlines</button>
+      <button onclick="switchTab('action')"    class="tab-btn" data-tab="action">⚡ Needs Action</button>
+    </div>
+
+    <!-- ── ALL APPLICATIONS ── -->
+    <div id="tab-all" class="tab-content" style="padding:16px;">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div class="search-wrap" style="flex:1;min-width:200px;">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Search company or role…" oninput="renderAll()">
+        </div>
+        <select id="filterStatus" onchange="renderAll()" style="width:auto;min-width:150px;">
+          <option value="">All Statuses</option>
+          <option value="applied">Applied</option>
+          <option value="test">Test / OA</option>
+          <option value="interview">Interview</option>
+          <option value="offer">Offer</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select id="sortBy" onchange="renderAll()" style="width:auto;min-width:150px;">
+          <option value="deadline">Sort: Deadline ↑</option>
+          <option value="company">Sort: Company A–Z</option>
+          <option value="status">Sort: Status</option>
+          <option value="added">Sort: Date Added</option>
+        </select>
+      </div>
+
+      <div class="table-wrap" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th><th>Role</th><th>Deadline</th>
+              <th>Status</th><th>Applied On</th><th>Notes</th>
+              <th style="text-align:center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="appTableBody"></tbody>
+        </table>
+        <div id="emptyMsg" class="hidden" style="text-align:center;padding:48px 16px;color:var(--muted);">
+          <div style="font-size:40px;margin-bottom:8px;">📭</div>
+          <div style="font-weight:600;font-size:15px;">No applications found.</div>
+          <div style="font-size:13px;margin-top:4px;">Add your first application to get started!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PIPELINE ── -->
+    <div id="tab-pipeline" class="tab-content hidden" style="padding:16px;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Visual snapshot of where every application stands.</p>
+      <div id="pipelineView" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;"></div>
+    </div>
+
+    <!-- ── DEADLINES ── -->
+    <div id="tab-deadlines" class="tab-content hidden" style="padding:16px;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+        Active applications sorted by deadline — soonest first.
+        <span style="color:var(--danger);font-weight:600;">Red = ≤3 days</span>,
+        <span style="color:var(--warn);font-weight:600;">Amber = ≤7 days</span>.
+      </p>
+      <div id="deadlineList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="deadlineEmpty" class="hidden" style="text-align:center;padding:40px;color:var(--muted);">
+        <div style="font-size:36px;margin-bottom:8px;">📅</div>
+        <div>No active applications with deadlines.</div>
+      </div>
+    </div>
+
+    <!-- ── NEEDS ACTION ── -->
+    <div id="tab-action" class="tab-content hidden" style="padding:16px;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Applications that need your attention next — sorted by priority.</p>
+      <div id="actionList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="actionEmpty" class="hidden" style="text-align:center;padding:40px;color:var(--muted);">
+        <div style="font-size:36px;margin-bottom:8px;">✅</div>
+        <div>Everything's up to date! Nothing needs immediate action.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ════════════════════ ADD / EDIT MODAL ════════════════════ -->
+<div id="appModal" class="modal-overlay hidden" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+
+    <!-- Gradient header banner -->
+    <div class="modal-header">
+      <div>
+        <div class="modal-header-title" id="modalTitle">➕ Add New Application</div>
+        <div class="modal-header-sub">Fill in the details below — fields marked * are required</div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    </div>
+
+    <!-- Form body -->
+    <div class="modal-body">
+      <form id="appForm" onsubmit="submitForm(event)" novalidate>
+        <input type="hidden" id="editId">
+
+        <!-- SECTION 1: Company & Role -->
+        <div class="modal-section">
+          <div class="modal-section-title">🏢 Company & Role</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label class="field-label">🏢 Company <span class="req">*</span></label>
+              <input type="text" id="fCompany" placeholder="e.g. Google, Amazon…" required maxlength="80">
+              <div id="errCompany" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:3px;"></div>
+            </div>
+            <div>
+              <label class="field-label">💼 Role <span class="req">*</span></label>
+              <input type="text" id="fRole" placeholder="e.g. SWE Intern, PM Intern…" required maxlength="80">
+              <div id="errRole" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:3px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Status (visual picker) -->
+        <div class="modal-section">
+          <div class="modal-section-title">📊 Application Status <span style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);">Click to select</span></div>
+          <div class="status-grid" id="statusGrid">
+            <div class="status-opt" data-val="applied"   onclick="selectStatus('applied')">   <span class="s-icon">📤</span>Applied   </div>
+            <div class="status-opt" data-val="test"      onclick="selectStatus('test')">      <span class="s-icon">📝</span>Test / OA </div>
+            <div class="status-opt" data-val="interview" onclick="selectStatus('interview')"> <span class="s-icon">🗣️</span>Interview </div>
+            <div class="status-opt" data-val="offer"     onclick="selectStatus('offer')">     <span class="s-icon">🎉</span>Offer     </div>
+            <div class="status-opt" data-val="rejected"  onclick="selectStatus('rejected')">  <span class="s-icon">❌</span>Rejected  </div>
+          </div>
+          <input type="hidden" id="fStatus" value="applied">
+        </div>
+
+        <!-- SECTION 3: Dates & Link -->
+        <div class="modal-section">
+          <div class="modal-section-title">📅 Dates & Link</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label class="field-label">⏰ Application Deadline</label>
+              <input type="date" id="fDeadline">
+            </div>
+            <div>
+              <label class="field-label">📆 Applied On</label>
+              <input type="date" id="fAppliedOn">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">🔗 Application / Job Link</label>
+            <input type="url" id="fLink" placeholder="https://careers.company.com/…">
+          </div>
+        </div>
+
+        <!-- SECTION 4: Notes -->
+        <div class="modal-section">
+          <div class="modal-section-title">📝 Notes & Next Action</div>
+          <textarea id="fNotes" rows="3" placeholder="e.g. Recruiter name: Sarah. Send follow-up by Friday. References needed." style="resize:vertical;"></textarea>
+        </div>
+
+        <!-- Footer buttons -->
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
+          <button type="button" onclick="closeModal()" class="btn-ghost">Cancel</button>
+          <button type="submit" class="btn-primary" id="submitBtn">
+            <span>💾</span> <span id="submitLabel">Save Application</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ CONFIRM DELETE ════════════════════ -->
+<div id="confirmModal" class="modal-overlay hidden" onclick="closeConfirmOutside(event)">
+  <div id="confirmBox">
+    <div style="font-size:40px;margin-bottom:12px;">🗑️</div>
+    <h3 style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--ink);">Delete Application?</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;" id="confirmMsg"></p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="closeConfirm()" class="btn-ghost">Cancel</button>
+      <button onclick="confirmDelete()" class="btn-danger">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">🎉 Saved!</div>
+
+<!-- ════════════════════════════ JAVASCRIPT ════════════════════════════ -->
+<script>
+// ─── THEME ────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  localStorage.setItem('interntrack_theme', next);
+}
+(function initTheme() {
+  const saved = localStorage.getItem('interntrack_theme');
+  if (saved) document.documentElement.dataset.theme = saved;
+  else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+    document.documentElement.dataset.theme = 'dark';
+})();
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'interntrack_v3';
+let apps = [];
+let deleteTargetId = null;
+let currentTab = 'all';
+
+const STATUSES = ['applied','test','interview','offer','rejected'];
+const STATUS_LABELS = { applied:'Applied', test:'Test / OA', interview:'Interview', offer:'Offer', rejected:'Rejected' };
+const STATUS_EMOJI  = { applied:'📤', test:'📝', interview:'🗣️', offer:'🎉', rejected:'❌' };
+const STATUS_ORDER  = { applied:0, test:1, interview:2, offer:3, rejected:4 };
+
+function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+function load() {
+  try { apps = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { apps = []; }
+  if (!apps.length) apps = sampleData();
+  render();
+}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(apps)); }
+
+function sampleData() {
+  const d = n => { const dt = new Date(); dt.setDate(dt.getDate()+n); return dt.toISOString().slice(0,10); };
+  return [
+    { id:uid(), company:'Google',    role:'SWE Intern',          deadline:d(5),  appliedOn:d(-10), status:'interview', link:'', notes:'Had first round, waiting for slot.', addedAt:Date.now()-9e5 },
+    { id:uid(), company:'Microsoft', role:'PM Intern',           deadline:d(2),  appliedOn:d(-5),  status:'test',      link:'', notes:'OA link sent. Due soon!',            addedAt:Date.now()-8e5 },
+    { id:uid(), company:'Amazon',    role:'Data Analyst Intern', deadline:d(14), appliedOn:d(-3),  status:'applied',   link:'', notes:'',                                   addedAt:Date.now()-7e5 },
+    { id:uid(), company:'Netflix',   role:'UX Design Intern',    deadline:d(-2), appliedOn:d(-20), status:'rejected',  link:'', notes:'No feedback provided.',              addedAt:Date.now()-6e5 },
+    { id:uid(), company:'Meta',      role:'ML Intern',           deadline:d(30), appliedOn:d(-1),  status:'applied',   link:'', notes:'Applied through campus portal.',     addedAt:Date.now()-5e5 },
+    { id:uid(), company:'Stripe',    role:'Backend Intern',      deadline:d(7),  appliedOn:d(-7),  status:'interview', link:'', notes:'Technical screen scheduled.',        addedAt:Date.now()-4e5 },
+    { id:uid(), company:'Figma',     role:'Product Design Intern',deadline:d(21),appliedOn:d(-4), status:'offer',     link:'', notes:'Got the offer! Decide within 3 days.',addedAt:Date.now()-3e5 },
+  ];
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() { renderStats(); renderAll(); renderPipeline(); renderDeadlines(); renderAction(); }
+
+function renderStats() {
+  const counts = { applied:0, test:0, interview:0, offer:0, rejected:0 };
+  apps.forEach(a => counts[a.status]++);
+  const defs = [
+    { label:'Total',     val:apps.length,     color:'#6366f1', icon:'📋' },
+    { label:'Applied',   val:counts.applied,   color:'#2563eb', icon:'📤' },
+    { label:'Test / OA', val:counts.test,      color:'#7c3aed', icon:'📝' },
+    { label:'Interview', val:counts.interview, color:'#d97706', icon:'🗣️' },
+    { label:'Offer',     val:counts.offer,     color:'#059669', icon:'🎉' },
+    { label:'Rejected',  val:counts.rejected,  color:'#dc2626', icon:'❌' },
+  ];
+  document.getElementById('statCards').innerHTML = defs.map((d,i) => `
+    <div class="stat-card fade-in" style="border-top:3px solid ${d.color};animation-delay:${i*0.04}s">
+      <span style="font-size:22px;">${d.icon}</span>
+      <span style="font-size:26px;font-weight:800;color:var(--ink);">${d.val}</span>
+      <span style="font-size:12px;font-weight:600;color:var(--muted);">${d.label}</span>
+    </div>`).join('');
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function daysUntil(ds) {
+  const t = new Date(); t.setHours(0,0,0,0);
+  const p = ds.split('-');
+  return Math.round((new Date(+p[0],+p[1]-1,+p[2]) - t) / 86400000);
+}
+function deadlineColor(ds) {
+  const d = daysUntil(ds);
+  return d < 0 ? 'var(--danger)' : d <= 3 ? 'var(--danger)' : d <= 7 ? 'var(--warn)' : 'var(--success)';
+}
+
+function renderAll() {
+  const q  = document.getElementById('searchInput').value.toLowerCase();
+  const fs = document.getElementById('filterStatus').value;
+  const sort = document.getElementById('sortBy').value;
+  let list = apps.filter(a =>
+    (!q || a.company.toLowerCase().includes(q) || a.role.toLowerCase().includes(q)) &&
+    (!fs || a.status === fs)
+  );
+  list.sort((a,b) => {
+    if (sort==='deadline') return (a.deadline||'9999') < (b.deadline||'9999') ? -1 : 1;
+    if (sort==='company')  return a.company.localeCompare(b.company);
+    if (sort==='status')   return STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+    return b.addedAt - a.addedAt;
+  });
+  const tbody = document.getElementById('appTableBody');
+  const empty = document.getElementById('emptyMsg');
+  if (!list.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  tbody.innerHTML = list.map(a => {
+    const dl = a.deadline ? daysUntil(a.deadline) : null;
+    const dlStr = dl===null ? '—'
+      : dl<0  ? `<span style="color:var(--danger);font-weight:700;">Passed</span>`
+      : dl===0 ? `<span style="color:var(--danger);font-weight:700;">Today!</span>`
+      : dl<=3  ? `<span style="color:var(--danger);font-weight:600;">${a.deadline} (${dl}d)</span>`
+      : dl<=7  ? `<span style="color:var(--warn);font-weight:600;">${a.deadline} (${dl}d)</span>`
+      : `<span>${a.deadline}</span>`;
+    const noteShort = a.notes ? (a.notes.length>42 ? a.notes.slice(0,42)+'…' : a.notes) : '—';
+    return `
+    <tr>
+      <td style="font-weight:700;color:var(--ink);">
+        ${a.link ? `<a href="${esc(a.link)}" target="_blank" style="color:var(--primary);text-decoration:underline;">${esc(a.company)}</a>` : esc(a.company)}
+      </td>
+      <td style="color:var(--ink);">${esc(a.role)}</td>
+      <td>${dlStr}</td>
+      <td><span class="badge badge-${a.status}">${STATUS_EMOJI[a.status]} ${STATUS_LABELS[a.status]}</span></td>
+      <td style="color:var(--muted);font-size:13px;">${a.appliedOn||'—'}</td>
+      <td style="color:var(--muted);font-size:13px;" title="${esc(a.notes)}">${noteShort}</td>
+      <td style="text-align:center;">
+        <div style="display:flex;gap:6px;justify-content:center;">
+          <button onclick="openEdit('${a.id}')" class="btn-edit">✏️ Edit</button>
+          <button onclick="askDelete('${a.id}')" class="btn-danger">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPipeline() {
+  const groups = { applied:[], test:[], interview:[], offer:[], rejected:[] };
+  apps.forEach(a => groups[a.status].push(a));
+  const pipeColors = { applied:'pipe-applied', test:'pipe-test', interview:'pipe-interview', offer:'pipe-offer', rejected:'pipe-rejected' };
+  document.getElementById('pipelineView').innerHTML = STATUSES.map(s => {
+    const list = groups[s];
+    const frac = apps.length ? Math.round((list.length/apps.length)*100) : 0;
+    return `
+    <div style="border:1px solid var(--border);border-radius:14px;padding:14px;background:var(--card-bg);transition:background 0.25s,border-color 0.25s;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-weight:700;font-size:13px;color:var(--ink);">${STATUS_EMOJI[s]} ${STATUS_LABELS[s]}</span>
+        <span class="count-pill ${pipeColors[s]}">${list.length}</span>
+      </div>
+      <div class="prog-bar" style="margin-bottom:10px;"><div class="prog-fill" style="width:${frac}%"></div></div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;">
+        ${list.length===0
+          ? `<p style="font-size:12px;color:var(--muted);font-style:italic;">None yet</p>`
+          : list.map(a => `
+            <div style="border-radius:8px;padding:8px 10px;background:var(--accent-bg);font-size:12px;">
+              <div style="font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(a.company)}</div>
+              <div style="color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(a.role)}</div>
+              ${a.deadline ? `<div style="margin-top:3px;color:${deadlineColor(a.deadline)};font-size:11px;">📅 ${a.deadline}</div>` : ''}
+            </div>`).join('')
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDeadlines() {
+  const active = apps.filter(a => a.deadline && a.status!=='rejected').sort((a,b) => a.deadline<b.deadline?-1:1);
+  const el = document.getElementById('deadlineList');
+  const emp = document.getElementById('deadlineEmpty');
+  if (!active.length) { el.innerHTML=''; emp.classList.remove('hidden'); return; }
+  emp.classList.add('hidden');
+  el.innerHTML = active.map(a => {
+    const d = daysUntil(a.deadline);
+    const cls = d<0||d<=3 ? 'row-urgent' : d<=7 ? 'row-soon' : 'row-ok';
+    const label = d<0 ? `<span style="color:var(--danger);font-weight:700;">Passed (${Math.abs(d)}d ago)</span>`
+      : d===0 ? `<span style="color:var(--danger);font-weight:700;">Due TODAY</span>`
+      : d<=3  ? `<span style="color:var(--danger);font-weight:700;">${d} day${d===1?'':'s'} left</span>`
+      : d<=7  ? `<span style="color:var(--warn);font-weight:600;">${d} days left</span>`
+      : `<span style="color:var(--success);font-weight:600;">${d} days left</span>`;
+    return `
+    <div class="${cls}" style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;transition:background 0.25s;">
+      <div>
+        <div style="font-weight:700;font-size:15px;color:var(--ink);">${esc(a.company)}</div>
+        <div style="font-size:13px;color:var(--muted);">${esc(a.role)}</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <span class="badge badge-${a.status}">${STATUS_EMOJI[a.status]} ${STATUS_LABELS[a.status]}</span>
+        ${label}
+        <span style="font-size:12px;color:var(--muted);">📅 ${a.deadline}</span>
+        <button onclick="openEdit('${a.id}')" class="btn-edit" style="padding:4px 10px;font-size:12px;">Edit</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAction() {
+  const actionItems = apps.filter(a => {
+    if (a.status==='rejected') return false;
+    if (a.status==='offer'||a.status==='interview'||a.status==='test') return true;
+    if (a.status==='applied' && a.deadline) { const d=daysUntil(a.deadline); return d>=0&&d<=7; }
+    return false;
+  }).sort((a,b) => {
+    const p={offer:0,interview:1,test:2,applied:3};
+    return p[a.status]-p[b.status] || (a.deadline||'9999').localeCompare(b.deadline||'9999');
+  });
+  const el = document.getElementById('actionList');
+  const emp = document.getElementById('actionEmpty');
+  if (!actionItems.length) { el.innerHTML=''; emp.classList.remove('hidden'); return; }
+  emp.classList.add('hidden');
+  const actionMsg = {
+    offer:     { tag:'Decide Now',   msg:'You have an offer — review and respond before it expires.' },
+    interview: { tag:'Prepare',      msg:'Interview stage — research the company and practise questions.' },
+    test:      { tag:'Complete OA',  msg:'Online assessment pending — complete it before the deadline.' },
+    applied:   { tag:'Follow Up',    msg:'Deadline approaching — consider sending a follow-up.' },
+  };
+  el.innerHTML = actionItems.map(a => {
+    const info = actionMsg[a.status];
+    const dl = a.deadline ? daysUntil(a.deadline) : null;
+    return `
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px;transition:background 0.25s;">
+      <span style="font-size:28px;">${STATUS_EMOJI[a.status]}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-weight:700;color:var(--ink);">${esc(a.company)}</span>
+          <span style="color:var(--muted);font-size:13px;">·</span>
+          <span style="font-size:13px;color:var(--muted);">${esc(a.role)}</span>
+          <span class="action-tag">${info.tag}</span>
+        </div>
+        <div style="font-size:13px;color:var(--muted);">${info.msg}</div>
+        ${dl!==null ? `<div style="font-size:12px;margin-top:4px;color:${deadlineColor(a.deadline)};">📅 Deadline: ${a.deadline} (${dl>=0?dl+'d left':'passed'})</div>` : ''}
+      </div>
+      <button onclick="openEdit('${a.id}')" class="btn-edit" style="font-size:12px;">Update Status</button>
+    </div>`;
+  }).join('');
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('tab-active'));
+  document.getElementById('tab-'+tab).classList.remove('hidden');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('tab-active');
+}
+
+// ─── STATUS PICKER ────────────────────────────────────────────────────────────
+let currentStatus = 'applied';
+function selectStatus(val) {
+  currentStatus = val;
+  document.getElementById('fStatus').value = val;
+  document.querySelectorAll('.status-opt').forEach(el => {
+    const isMe = el.dataset.val === val;
+    el.className = 'status-opt' + (isMe ? ` selected sel-${val}` : '');
+  });
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('editId').value = '';
+  document.getElementById('modalTitle').textContent = '➕ Add New Application';
+  document.getElementById('submitLabel').textContent = 'Save Application';
+  document.getElementById('appForm').reset();
+  document.getElementById('fAppliedOn').value = new Date().toISOString().slice(0,10);
+  selectStatus('applied');
+  document.getElementById('appModal').classList.remove('hidden');
+}
+
+function openEdit(id) {
+  const a = apps.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('editId').value    = id;
+  document.getElementById('modalTitle').textContent = '✏️ Edit Application';
+  document.getElementById('submitLabel').textContent = 'Update Application';
+  document.getElementById('fCompany').value  = a.company;
+  document.getElementById('fRole').value     = a.role;
+  document.getElementById('fDeadline').value = a.deadline||'';
+  document.getElementById('fAppliedOn').value= a.appliedOn||'';
+  document.getElementById('fLink').value     = a.link||'';
+  document.getElementById('fNotes').value    = a.notes||'';
+  selectStatus(a.status);
+  document.getElementById('appModal').classList.remove('hidden');
+}
+
+function closeModal() { document.getElementById('appModal').classList.add('hidden'); }
+function closeModalOutside(e) { if (e.target===document.getElementById('appModal')) closeModal(); }
+
+function submitForm(e) {
+  e.preventDefault();
+  const company = document.getElementById('fCompany').value.trim();
+  const role    = document.getElementById('fRole').value.trim();
+  let valid = true;
+  document.getElementById('errCompany').textContent = company ? '' : '⚠ Company name is required.'; if(!company) valid=false;
+  document.getElementById('errRole').textContent    = role    ? '' : '⚠ Role is required.';          if(!role)    valid=false;
+  if (!valid) return;
+  const id = document.getElementById('editId').value;
+  const data = {
+    company,
+    role,
+    deadline:  document.getElementById('fDeadline').value,
+    appliedOn: document.getElementById('fAppliedOn').value,
+    status:    document.getElementById('fStatus').value,
+    link:      document.getElementById('fLink').value.trim(),
+    notes:     document.getElementById('fNotes').value.trim(),
+  };
+  if (id) {
+    const idx = apps.findIndex(a => a.id===id);
+    apps[idx] = { ...apps[idx], ...data };
+    showToast('✏️ Application updated!');
+  } else {
+    apps.push({ id:uid(), addedAt:Date.now(), ...data });
+    showToast('🎉 Application added!');
+  }
+  save(); render(); closeModal();
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+function askDelete(id) {
+  deleteTargetId = id;
+  const a = apps.find(x => x.id===id);
+  document.getElementById('confirmMsg').textContent = `Delete "${a.company} – ${a.role}"? This cannot be undone.`;
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+function closeConfirm() { document.getElementById('confirmModal').classList.add('hidden'); deleteTargetId=null; }
+function closeConfirmOutside(e) { if (e.target===document.getElementById('confirmModal')) closeConfirm(); }
+function confirmDelete() {
+  if (!deleteTargetId) return;
+  apps = apps.filter(a => a.id!==deleteTargetId);
+  save(); render(); closeConfirm(); showToast('🗑️ Application deleted.');
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── KEYBOARD ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='n') { e.preventDefault(); openModal(); }
+  if (e.key==='Escape') { closeModal(); closeConfirm(); }
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+load();
+switchTab('all');
+</script>
+</body>
+</html>
